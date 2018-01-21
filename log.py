@@ -1,35 +1,40 @@
 #! /usr/bin/env python3
 
+"""Python program to generate report from the logs generated 
+   by a newspaper website"""
+
 import psycopg2
 
 
 def connect():
+    """Method to connect to news database"""  
     return psycopg2.connect("dbname=news")
 
-query1 = """select a.title, top_three_views.views from
+query1 = """SELECT a.title, top_three_views.views FROM
           articles a,
-          (select path, count(*) as views from log
-          where status = '200 OK'
-          and path like '/article/%'
-          group by path
-          order by views desc
-          limit 3) as top_three_views
-          where '/article/' || a.slug = top_three_views.path
-          order by top_three_views.views desc"""
+          (SELECT path, count(*) AS views FROM log
+          WHERE status = '200 OK'
+          AND path LIKE '/article/%'
+          GROUP BY path
+          ORDER BY views DESC
+          LIMIT 3) as top_three_views
+          WHERE '/article/' || a.slug = top_three_views.path
+          ORDER BY top_three_views.views DESC"""
 
-query2 = """select auth.name, auth_art_stats.arts_by_auth from
+query2 = """SELECT auth.name, auth_art_stats.arts_by_auth FROM
           authors auth,
-          (select a.author, count(*) as arts_by_auth
-          from log l, articles a
-          where l.path = '/article/' || a.slug
-          group by a.author
-          order by arts_by_auth desc) as auth_art_stats
-          where auth.id = auth_art_stats.author"""
+          (SELECT a.author, count(*) AS arts_by_auth
+          FROM log l, articles a
+          WHERE l.path = '/article/' || a.slug
+          GROUP BY a.author
+          ORDER BY arts_by_auth DESC) AS auth_art_stats
+          WHERE auth.id = auth_art_stats.author"""
 
-query3 = """select time_as_date, err from percentage_error where err > 1.0"""
+query3 = """SELECT time_as_date, err FROM percentage_error WHERE err > 1.0"""
 
 
 def article_popularity(query1):
+    """Method giving the top 3 popular articles"""
     db = connect()
     cur = db.cursor()
     cur.execute(query1)
@@ -42,6 +47,7 @@ def article_popularity(query1):
 
 
 def author_popularity(query2):
+    """Method giving the popularity of the authors"""
     db = connect()
     cur = db.cursor()
     cur.execute(query2)
@@ -54,6 +60,7 @@ def author_popularity(query2):
 
 
 def percent_error(query3):
+    """Method to calclulate percent of bad requests greater than 1"""    
     db = connect()
     cur = db.cursor()
     cur.execute(query3)

@@ -31,25 +31,23 @@ The project is implemented in python and uses PostgreSQL as its backend database
 
 ## view full_log_count
 
-`create view full_log_count as
-select date(time) time_as_date , count(*) as full_count from log
-group by time_as_date 
-order by full_count desc;`
+`CREATE OR REPLACE VIEW full_log_count as
+SELECT date(time) time_as_date , COUNT(*) as full_count FROM log
+GROUP BY time_as_date 
+ORDER BY full_count desc;`
 
 ## view bad_request_log_count 
 
-`create view bad_request_log_count as
-select date(time) as tad , count(*) as bad_request_count from log
-where status = '404 NOT FOUND'
-group by tad
-order by bad_request_count desc;
-where date(time) = bad_requests.time_as_date
-where perc > 1.0;`
+`CREATE OR REPLACE VIEW bad_request_log_count as
+SELECT date(time) as tad , COUNT(*) as bad_request_count FROM log
+WHERE status = '404 NOT FOUND'
+GROUP BY tad
+ORDER BY bad_request_count desc;`
 
 ## view percentage_error
 
-`create view percentage_error as
-select full_log_count.time_as_date,
-round((100.0*bad_request_log_count.bad_request_count)/full_log_count.full_count,3) as err
-from bad_request_log_count, full_log_count
-where bad_request_log_count.tad=full_log_count.time_as_date;`
+`CREATE OR REPLACE VIEW percentage_error as
+SELECT full_log_count.time_as_date,
+round((100.0*bad_request_log_count.bad_request_count)/full_log_count.full_count,3) AS err
+FROM bad_request_log_count, full_log_count
+WHERE bad_request_log_count.tad=full_log_count.time_as_date;`
